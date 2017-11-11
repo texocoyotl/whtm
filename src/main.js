@@ -2,31 +2,63 @@ import Vue from 'vue'
 import App from './App.vue'
 import Vuetify from 'vuetify'
 import './stylus/main.styl'
+import https from 'https'
 
 Vue.use(Vuetify)
 
 import VueRouter from 'vue-router';
 Vue.use(VueRouter);
 
-import axios from 'axios';
 import VueAxios from 'vue-axios';
-Vue.use(VueAxios, axios);
+import axios from 'axios';
+Vue.use(VueAxios, axios.create({
+	//baseURL: 'https://whtmapi.herokuapp.com'
+	baseURL: 'http://localhost:5000'
+}));
 
-import DisplayItem from './components/DisplayItem.vue';
+import VeeValidate from 'vee-validate';
+Vue.use(VeeValidate);
+
+import Vuelidate from 'vuelidate'
+Vue.use(Vuelidate)
+
+import Dashboard from './components/Dashboard.vue';
+import Players from './components/Players.vue';
+import Armies from './components/Armies.vue';
+import Ratings from './components/Ratings.vue';
 
 const routes = [
-    {
-        name: 'DisplayItem',
-        path: '/',
-        component: DisplayItem
-  }
+	{
+		name: 'Dashboard',
+		path: '/dashboard',
+		component: Dashboard
+      },
+	{
+		name: 'Players',
+		path: '/players',
+		component: Players
+    },
+	{
+		name: 'Armies',
+		path: '/armies',
+		component: Armies
+    },
+	{
+		name: 'Ratings',
+		path: '/ratings',
+		component: Ratings
+    },
+	{
+		name: '*',
+		path: '*',
+		component: Dashboard
+    }
 ];
 
 const router = new VueRouter({
-    mode: 'history',
-    routes: routes
+	mode: 'history',
+	routes: routes
 });
-
-new Vue(Vue.util.extend({
-    router
+var vue = new Vue(Vue.util.extend({
+	router
 }, App)).$mount('#app');
