@@ -18,7 +18,7 @@
 								{{player.name}}
 								<v-spacer></v-spacer>
 
-								<v-chip color="red" text-color="white">Coverage: {{player.ratingsAvg.toFixed(2)}}%</v-chip>
+								<v-chip :color="colors[(player.ratingsAvg / 25).toFixed(0)]" text-color="black">Coverage: {{player.ratingsAvg.toFixed(2)}}%</v-chip>
 								
 							</v-layout>
 
@@ -27,11 +27,11 @@
 							<v-card-text class="grey lighten-3">
 							<v-layout row wrap>
 								<div v-for="rating, i in player.ratingTotals" key="i">
-									<v-chip :color="colors[i]">
+									<v-chip :color="colors[i]" text-color="black">
 										<v-icon left color="colors[i]">
 											{{ratingIcons[i]}}
 										</v-icon>
-										<span class="title">{{rating	}}</span>
+										<span class="title">{{rating}}</span>
 									</v-chip>
 								</div>
 								</v-layout>
@@ -72,7 +72,7 @@
 									</span>
 								</div>
 								
-								<v-chip :color="colors[armyRatingTotals[army._id].ratingsMax]" text-color="black">Coverage: {{armyRatingTotals[army._id].coverage.toFixed(2)}}%</v-chip>
+								<v-chip :color="colors[(armyRatingTotals[army._id].coverage / 25).toFixed(0)]" text-color="black">Coverage: {{armyRatingTotals[army._id].coverage.toFixed(2)}}%</v-chip>
 							</v-layout>
 						</div>
 						<v-card>

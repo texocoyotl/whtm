@@ -35,7 +35,7 @@
                     <v-card-text>
                         <v-text-field label="Name" hint="Short description of the army list" v-model="selectedArmy.name" required v-validate="'required'" required :error-messages="errors.collect('name')"
                            data-vv-name="name"></v-text-field>
-                        <v-select v-model="selectedArmy.faction" label="Faction" required :items="factions" item-text='name' item-value="_id" v-validate="'required'"
+                        <v-select v-model="selectedArmy.faction" label="Faction" autocomplete required :items="factions" item-text='name' item-value="_id" v-validate="'required'"
                        data-vv-name="faction"
                        :error-messages="errors.collect('faction')"></v-select>
 						<v-text-field label="URL" hint="External link to army list" v-model="selectedArmy.build_url" v-validate="'url'"  :error-messages="errors.collect('build_url')"

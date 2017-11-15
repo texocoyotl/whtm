@@ -21,9 +21,10 @@
         
         <v-layout row wrap>
        <v-flex xs3>
+				 <v-layout column>
          <v-card flat>
 
-            <v-layout column>
+            <v-layout column >
           <v-btn v-for="(ll, k) in teamArmies" :key="k" :value="ll._id" @click="updateList(ll._id)"
                  :color="selectedTeamArmy==ll._id ? 'primary' : 'transparent'"
                  >
@@ -32,6 +33,9 @@
               </v-layout>
 
          </v-card>
+					 
+				 <v-btn class="mt-5" color="primary" @click="saveRatings">Save</v-btn>
+				 </v-layout>
       </v-flex>
           
           <v-flex xs9 >
@@ -41,9 +45,8 @@
           </v-flex>
 					
       </v-layout>
-				 <v-layout row wrap>
-					 <v-btn color="primary" @click="saveRatings">Save</v-btn>
-				</v-layout>
+				 
+					 
       </v-container>
 </template>
 
