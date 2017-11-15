@@ -12,8 +12,8 @@ Vue.use(VueRouter);
 import VueAxios from 'vue-axios';
 import axios from 'axios';
 Vue.use(VueAxios, axios.create({
-	//baseURL: 'https://whtmapi.herokuapp.com'
-	baseURL: 'http://localhost:5000'
+	baseURL: 'https://whtmapi.herokuapp.com'
+	//baseURL: 'http://localhost:5000'
 }));
 
 import VeeValidate from 'vee-validate';
@@ -21,6 +21,9 @@ Vue.use(VeeValidate);
 
 import Vuelidate from 'vuelidate'
 Vue.use(Vuelidate)
+
+import ECharts from 'vue-echarts/components/ECharts.vue'
+Vue.use(ECharts);
 
 import Dashboard from './components/Dashboard.vue';
 import Players from './components/Players.vue';

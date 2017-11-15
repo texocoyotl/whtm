@@ -2,7 +2,7 @@
 
       <v-container fluid>
     <v-layout row wrap>
-       <v-flex xs3>{{selectedTeamArmy}} {{isRated}} {{ selectedFaction }}
+       <v-flex xs3>
       </v-flex>
       <v-flex xs9>
       <v-subheader>Filters:</v-subheader>
@@ -34,14 +34,16 @@
          </v-card>
       </v-flex>
           
-          <v-flex xs9 style="max-height: 400px" class="scroll-y" >
+          <v-flex xs9 >
       <v-layout column >
-              <v-slider v-for="(r, k) in filteredRatings" :key="k" :label="r.name" v-model="r.rating" min="1" max="5" step="1" snap :color="colors[r.rating-1]" :track-color="colors[r.rating-1]"></v-slider>
+              <v-slider v-for="(r, k) in filteredRatings" :key="k" :label="r.name" v-model="r.rating" min="0" max="4" step="1" snap :color="colors[r.rating]" :track-color="colors[r.rating]"></v-slider>
       </v-layout>
           </v-flex>
-								<p>{{}}</p>
-
+					
       </v-layout>
+				 <v-layout row wrap>
+					 <v-btn color="primary" @click="saveRatings">Save</v-btn>
+				</v-layout>
       </v-container>
 </template>
 
@@ -100,16 +102,6 @@ module.exports = {
 			},
 
 			computed:{
-				
-				factionsList: function(){
-					var list = [];
-					if (this.factions.length > 0){
-						this.factions.forEach(function(faction){
-							list[faction._id] = faction.name;
-						});
-						return list;
-					}
-				},
 
 				teamArmies: function(){
 					var self = this;
@@ -225,6 +217,24 @@ module.exports = {
 						});
 					}
 				},
+				saveRatings: function(){
+					var output = {
+						team_army: this.selectedTeamArmy,
+						rated_armies: []
+					};
+					this.nonTeamArmiesRatings.forEach(function(army){
+						var e = {
+							army: army._id,
+							rating: army.rating
+						};
+						output.rated_armies.push(e);
+					});
+					
+					this.axios.post('/ratings/', output).then((response) => {
+						this.fetchRatings();
+					})
+
+				}
 				
 			}
     }

@@ -54,8 +54,7 @@
 
 			</v-flex>
 		</v-layout>
-		
-{{team}}
+
 		
 	</v-container>
 </template>

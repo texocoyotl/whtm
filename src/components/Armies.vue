@@ -48,7 +48,7 @@
                 </form>
             </v-card>
         </v-dialog>
-				{{armies}}
+
     </div>
 
 </template>
