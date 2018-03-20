@@ -62,7 +62,7 @@
 import { required, minLength } from 'vuelidate/lib/validators'
 
 	var util = require('util');
-	var teamUri = '/team/59f9fd9c08e0bd3934d8f874';
+	var teamUri = '/team/5aaf3bff659b2734587e8cc4';
 	
 
 	export default {
@@ -122,9 +122,15 @@ import { required, minLength } from 'vuelidate/lib/validators'
 				},
 			  
 				fetchTeam() {
-					this.axios.get(teamUri).then((response) => {
+					this.axios.get(teamUri, {
+                        headers: {
+                            'x-access-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVhYWYzYmZmNjU5YjI3MzQ1ODdlOGNjNCIsImlhdCI6MTUyMTUwMDk1MSwiZXhwIjoxNTIxNTg3MzUxfQ.lgWo1_OOvQQYwn0FfK_z5DO4k9YEFHkWT73G6I2u0co'
+                        }}).then((response) => {
 						this.team = response.data;
-					});
+					}).catch(function(error) {
+                        console.log('Error', error.message);
+                        console.log(error.config);
+                    });
 				},
 				saveTeam(callback) {
 					this.axios.put(teamUri, this.team).then((response) => {

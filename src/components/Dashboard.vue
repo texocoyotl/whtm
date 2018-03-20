@@ -92,7 +92,7 @@
 
 <script>
 	var util = require('util');
-	var teamUri = '/team/59f9fd9c08e0bd3934d8f874';
+	var teamUri = '/team/5aaf3bff659b2734587e8cc4';
 	import ECharts from 'vue-echarts/components/ECharts.vue'
 	import 'echarts/lib/chart/radar'
 	import 'echarts/lib/chart/bar'
