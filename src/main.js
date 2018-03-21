@@ -14,8 +14,8 @@ Vue.use(VueRouter);
 import VueAxios from 'vue-axios';
 import axios from 'axios';
 Vue.use(VueAxios, axios.create({
-	//baseURL: 'https://whtmapi.herokuapp.com'
-    baseURL: 'http://localhost:5000'
+	baseURL: 'https://whtmapi.herokuapp.com'
+    //baseURL: 'http://localhost:5000'
 }));
 
 import VeeValidate from 'vee-validate';
