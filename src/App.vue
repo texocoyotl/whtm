@@ -1,21 +1,17 @@
 <template>
   <v-app light>
+      
     <v-toolbar fixed app>
-     
       <v-toolbar-title>{{ title }}</v-toolbar-title>
-
-	  </v-toolbar>
-	  
+    </v-toolbar>
+      
 	<main>
-      <v-content>
-        
-              <router-view></router-view>
-              
-           
-      </v-content>
+    <v-content>
+        <router-view></router-view>
+    </v-content>
     </main>
     
-	<v-bottom-nav :value="true" class="white">
+	<v-bottom-nav v-if="teamId" value="true" class="white">
 	  <v-btn flat to="/dashboard">
         <span>Dashboard</span>
         <v-icon>equalizer</v-icon>
@@ -49,7 +45,16 @@
 			return {
 				title: 'Warmachine / Hordes Team Matcher'
 			}
-		}
+		},
+        computed: {
+            token: function(){
+                return this.$store.getters.token;
+            },
+            teamId: function(){
+                return this.$store.getters.teamId;
+            }
+        }
+
 	}
 
 </script>

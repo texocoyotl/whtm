@@ -28,9 +28,9 @@
 					<v-card>
                          
                         
-						<v-form v-model="valid" ref="form" lazy-validation>
+						<v-form v-model="valid" ref="form" lazy-validation @submit.prevent="login">
 							<v-card-text>
-								<v-text-field label="Password" v-model="password" :type="'password'" required :rules="[v => !!v || 'Password is required']"></v-text-field>
+								<v-text-field ref="passwordField" label="Password" v-model="password" :type="'password'" required :rules="[v => !!v || 'Password is required']"></v-text-field>
 							</v-card-text>
                 
                                
@@ -49,7 +49,6 @@
 					</v-card>
 				</v-dialog>
                 
-                <p>{{ token }}</p>
 			</v-flex>
 		</v-layout>
 		
@@ -59,7 +58,6 @@
 <script>
     
 	var util = require('util');
-	import { mapState } from 'vuex'
 		
 	export default {
         
@@ -77,13 +75,24 @@
                 
 			}
 		},
-         computed: mapState({
-            token: state => state.token,
-         }),
+         computed: {
+            token: function(){
+                return this.$store.getters.token;
+            },
+            teamId: function(){
+                return this.$store.getters.teamId;
+            }
+        },
 
 		created: function() {
             this.fetchTeamNames();
 		},
+        
+        watch: {
+          passwordDialog: function(){
+              this.$nextTick(this.$refs.passwordField.focus);
+          }  
+        },
 
 		methods: {
             fetchTeamNames() {
@@ -96,6 +105,8 @@
                     this.$refs.form.reset()
 					this.passwordDialog = true;
                     this.selectedTeamId = teamId;
+                
+                    
 				},
             login(){
 
@@ -104,7 +115,7 @@
                     
                     this.axios.post('/authenticate', {team_id: this.selectedTeamId, password: this.password})
                         .then((response) => {
-                            console.log(response.data);
+                            //console.log(response.data);
                             this.logingIn = false;
                             if (!response.data.success){
                                 alert(response.data.message);
@@ -112,6 +123,9 @@
                             } else {
                                 this.passwordDialog = false;
                                 this.$store.commit("updateToken", response.data.token);
+                                this.$store.commit("updateTeamId", this.selectedTeamId);
+                                
+                                this.$router.push('Dashboard')
                             }
                         })
                          .catch(function(error) {

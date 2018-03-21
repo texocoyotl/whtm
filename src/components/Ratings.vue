@@ -40,7 +40,7 @@
           
           <v-flex xs9 >
       <v-layout column >
-              <v-slider v-for="(r, k) in filteredRatings" :key="k" :label="r.name" v-model="r.rating" min="0" max="4" step="1" snap :color="colors[r.rating]" :track-color="colors[r.rating]"></v-slider>
+              <v-slider v-for="(r, k) in filteredRatings" :key="k" :label="r.name" v-model="r.rating" min="1" max="5" step="1" snap :color="colors[r.rating]" :track-color="colors[r.rating]"></v-slider>
       </v-layout>
           </v-flex>
 					
@@ -58,7 +58,7 @@ var teamUri = '/team/59f9fd9c08e0bd3934d8f874';
 module.exports = {
     data: function(){
         return{
-          colors: ['red', 'orange', 'yellow', 'light-green', 'green'],
+          colors: ['', 'red', 'orange', 'yellow', 'light-green', 'green'],
           factions: [],
 					selectedFaction: '0',
           selectedTeamArmy: null,					
@@ -105,6 +105,13 @@ module.exports = {
 			},
 
 			computed:{
+                
+                token: function(){
+                    return this.$store.getters.token;
+                },
+                teamId: function(){
+                    return this.$store.getters.teamId;
+                },
 
 				teamArmies: function(){
 					var self = this;
@@ -156,33 +163,49 @@ module.exports = {
 			},
 
 			created: function(){
-					this.fetchFactions();
-					this.fetchTeam();
-				  this.fetchRatings();
-				  this.fetchArmies();
+                if (!this.teamId){
+                    this.$router.push('Teams')
+                } else {
+                    this.fetchFactions();
+                    this.fetchTeam();
+                    this.fetchRatings();
+                    this.fetchArmies();
+                }
 			},
 
 			methods: {
 				fetchTeam() {
-					this.axios.get(teamUri).then((response) => {
+					this.axios.get('/team/' + this.teamId, {
+                        headers: {
+                            'x-access-token': this.token
+                        }}).then((response) => {
 						this.team = response.data;
 					});
 				},
 				fetchFactions() {
-					this.axios.get('/factions').then((response) => {
+					this.axios.get('/factions', {
+                        headers: {
+                            'x-access-token': this.token
+                        }}).then((response) => {
 							this.factions = [{_id: '0', name: 'All Factions'}];
 							this.factions = this.factions.concat(response.data);
 
 					});
 				},
 				fetchRatings() {
-					this.axios.get('/ratings').then((response) => {
+					this.axios.get('/ratings', {
+                        headers: {
+                            'x-access-token': this.token
+                        }}).then((response) => {
 							this.ratings = response.data;
 
 					});
 				},
 				fetchArmies() {
-						this.axios.get('/armies').then((response) => {
+						this.axios.get('/armies/' + this.teamId, {
+                        headers: {
+                            'x-access-token': this.token
+                        }}).then((response) => {
 							  response.data.forEach(function(a){
 									a.isRated = false;
 									a.rating = 0;
@@ -233,7 +256,12 @@ module.exports = {
 						output.rated_armies.push(e);
 					});
 					
-					this.axios.post('/ratings/', output).then((response) => {
+                    console.log(output);
+                    
+					this.axios.post('/ratings/', output, {
+                        headers: {
+                            'x-access-token': this.token
+                        }}).then((response) => {
 						this.fetchRatings();
 					})
 

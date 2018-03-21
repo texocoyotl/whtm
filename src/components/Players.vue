@@ -51,7 +51,6 @@
 					</v-card>
 				</v-dialog>
 
-
 			</v-flex>
 		</v-layout>
 		
@@ -59,143 +58,182 @@
 </template>
 
 <script>
-import { required, minLength } from 'vuelidate/lib/validators'
+    import {
+        required,
+        minLength
+    } from 'vuelidate/lib/validators'
+    import {
+        mapState
+    } from 'vuex'
+    var util = require('util');
 
-	var util = require('util');
-	var teamUri = '/team/5aaf3bff659b2734587e8cc4';
-	
 
-	export default {
-		validations: {
-				playerName: {
-					required
-				}
-		},
-		
-		data: function() {
-			return {
-				factions: [],
-				newPlayer: null,
-				armyDialog: false,
-				team: {},
-				army: null,
-				playerName: ''
-			}
-		},
-			
-		computed: {
-			nameErrors () {
-        const errors = []
-        if (!this.$v.playerName.$dirty) return errors
-        !this.$v.playerName.required && errors.push('Name is required.')
-        return errors
-      }
-		},
 
-		created: function() {
-			this.fetchFactions();
-			this.fetchTeam();
-		},
+    export default {
+        validations: {
+            playerName: {
+                required
+            }
+        },
 
-		methods: {
-			fetchFactions() {
-					this.axios.get('/factions').then((response) => {
-						this.factions = response.data;
-					});
-				},
-			
-			  showPlayerForm(){
-					this.newPlayer = {};
-					this.playerName = '';
-					this.$v.$reset();
-				},
+        data: function() {
+            return {
+                factions: [],
+                newPlayer: null,
+                armyDialog: false,
+                team: {},
+                army: null,
+                playerName: ''
+            }
+        },
 
-				addPlayer() {
-					this.$v.$touch();
-					if (!this.$v.playerName.$invalid){
-						this.newPlayer = {name: this.playerName};
-						this.team.players.push(this.newPlayer);
-							this.saveTeam(() => {
-								this.newPlayer = null;
-							});
-					}
-				},
-			  
-				fetchTeam() {
-					this.axios.get(teamUri, {
-                        headers: {
-                            'x-access-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVhYWYzYmZmNjU5YjI3MzQ1ODdlOGNjNCIsImlhdCI6MTUyMTUwMDk1MSwiZXhwIjoxNTIxNTg3MzUxfQ.lgWo1_OOvQQYwn0FfK_z5DO4k9YEFHkWT73G6I2u0co'
-                        }}).then((response) => {
-						this.team = response.data;
-					}).catch(function(error) {
-                        console.log('Error', error.message);
-                        console.log(error.config);
+        computed: {
+            token: function() {
+                return this.$store.getters.token;
+            },
+            teamId: function() {
+                return this.$store.getters.teamId;
+            }
+        },
+
+        created: function() {
+            if (!this.teamId) {
+                this.$router.push('Teams')
+            } else {
+                this.fetchTeam();
+                this.fetchFactions();
+            }
+        },
+
+        methods: {
+            
+            fetchTeam() {
+
+                this.axios.get('/team/' + this.teamId, {
+                    headers: {
+                        'x-access-token': this.token
+                    }
+                }).then((response) => {
+                    this.team = response.data;
+                }).catch(function(error) {
+                    console.log('Error', error.message);
+                    console.log(error.config);
+                });
+
+            },
+
+            fetchFactions() {
+                this.axios.get('/factions', {
+                    headers: {
+                        'x-access-token': this.token
+                    }
+                }).then((response) => {
+                    this.factions = response.data;
+                });
+            },
+
+            showPlayerForm() {
+                this.newPlayer = {};
+                this.playerName = '';
+                this.$v.$reset();
+            },
+
+            addPlayer() {
+                this.$v.$touch();
+                if (!this.$v.playerName.$invalid) {
+                    this.newPlayer = {
+                        name: this.playerName
+                    };
+                    this.team.players.push(this.newPlayer);
+                    this.saveTeam(() => {
+                        this.newPlayer = null;
                     });
-				},
-				saveTeam(callback) {
-					this.axios.put(teamUri, this.team).then((response) => {
-						this.fetchTeam();
-						callback();
-					}).catch(function(error) {
-						console.log('Error', error.message);
-						console.log(error.config);
-					});
-				},
-				deletePlayer(player) {
-					this.team.players = this.team.players.filter(function(p) {
-						return player._id !== p._id;
-					})
-					this.saveTeam(function(){});
-				},
-				openArmyDialog(player) {
-					this.$validator.reset();
-					this.armyDialog = true;
-					this.$validator.reset();
-					this.army = {
-						team: this.team._id,
-						player: player._id
-					};
-					
-				},
-				openArmyDialogForEdit(player, army) {
-					this.$validator.reset();
-					this.armyDialog = true;
-					this.army = {
-						_id: army._id,
-						name: army.name,
-						faction: army.faction,
-						build_url: army.build_url,
-						team: this.team._id,
-						player: player._id
-					}
-				},
-				saveArmy() {
-					this.$validator.validateAll('armyForm').then((result) => {
-						if (result) {
-							if (this.army._id) {
-								this.axios.post('/army/' + this.army._id, this.army).then((response) => {
-									this.armyDialog = false;
-									this.fetchTeam();
-								})
-							} else {
-								this.axios.post('/armies', this.army).then((response) => {
-									this.armyDialog = false;
-									this.fetchTeam();
-								})
-							}
-							return;
-						}
-					});
-				}, deleteArmy(player, army) {
-					this.axios.delete('/army/' + army._id, {player: player._id}).then((response) => {
-						this.fetchTeam();
-					}).catch(function(error) {
-						console.log('Error', error.message);
-						console.log(error.config);
-					});
-				}
+                }
+            },
 
-		}
-	}
 
+            saveTeam(callback) {
+                this.axios.put(teamUri, this.team, this.selectedArmy, {
+                    headers: {
+                        'x-access-token': this.token
+                    }
+                }).then((response) => {
+                    this.fetchTeam();
+                    callback();
+                }).catch(function(error) {
+                    console.log('Error', error.message);
+                    console.log(error.config);
+                });
+            },
+            deletePlayer(player) {
+                this.team.players = this.team.players.filter(function(p) {
+                    return player._id !== p._id;
+                })
+                this.saveTeam(function() {});
+            },
+            openArmyDialog(player) {
+                this.$validator.reset();
+                this.armyDialog = true;
+                this.$validator.reset();
+                this.army = {
+                    team: this.team._id,
+                    player: player._id
+                };
+
+            },
+            openArmyDialogForEdit(player, army) {
+                this.$validator.reset();
+                this.armyDialog = true;
+                this.army = {
+                    _id: army._id,
+                    name: army.name,
+                    faction: army.faction,
+                    build_url: army.build_url,
+                    team: this.team._id,
+                    player: player._id
+                }
+            },
+            saveArmy() {
+                this.$validator.validateAll('armyForm').then((result) => {
+                    if (result) {
+                        if (this.army._id) {
+                            this.axios.post('/army/' + this.army._id, this.army, {
+                                headers: {
+                                    'x-access-token': this.token
+                                }
+                            }).then((response) => {
+                                this.armyDialog = false;
+                                this.fetchTeam();
+                            })
+                        } else {
+                            this.axios.post('/armies', this.army, {
+                                headers: {
+                                    'x-access-token': this.token
+                                }
+                            }).then((response) => {
+                                this.armyDialog = false;
+                                this.fetchTeam();
+                            })
+                        }
+                        return;
+                    }
+                });
+            },
+            deleteArmy(player, army) {
+                this.axios.delete('/army/' + army._id, {
+                    player: player._id
+                }, this.selectedArmy, {
+                    headers: {
+                        'x-access-token': this.token
+                    }
+                }).then((response) => {
+                    this.fetchTeam();
+                }).catch(function(error) {
+                    console.log('Error', error.message);
+                    console.log(error.config);
+                });
+            }
+
+        }
+    }
 </script>

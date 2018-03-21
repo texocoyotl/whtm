@@ -6,14 +6,14 @@
         </div>
         <br />
 		
-        <v-data-table v-bind:headers="headers" v-bind:items="armies" v-bind:pagination.sync="pagination" item-key="_id" class="elevation-1">
+        <v-data-table v-bind:headers="headers" v-bind:items="armies" v-bind:pagination.sync="pagination" item-key="_id" class="elevation-1" hide-actions>
             <template slot="headers" slot-scope="props">
                 <tr>
                     <th v-for="header in props.headers" :key="header.text" :class="['column sortable', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']" @click="changeSort(header.value)">
                         <v-icon>arrow_upward</v-icon> {{ header.text }} </th>
                 </tr>
             </template>
-            <template slot="items" slot-scope="props">
+<template slot="items" slot-scope="props">
                 <tr>
                     <td class="text-xs-center">{{ props.item.name }}</td>
                     <td class="text-xs-center" v-if="props.item.faction">{{ props.item.faction.name }}</td>
@@ -27,34 +27,29 @@
                     </td>
                 </tr>
             </template>
-        </v-data-table>
-        <v-dialog v-model="armyDialog" persistent>
-            <v-card>
-                <form>
-                    <v-card-title> Create An Item </v-card-title>
-                    <v-card-text>
-                        <v-text-field label="Name" hint="Short description of the army list" v-model="selectedArmy.name" required v-validate="'required'" required :error-messages="errors.collect('name')"
-                           data-vv-name="name"></v-text-field>
-                        <v-select v-model="selectedArmy.faction" label="Faction" autocomplete required :items="factions" item-text='name' item-value="_id" v-validate="'required'"
-                       data-vv-name="faction"
-                       :error-messages="errors.collect('faction')"></v-select>
-						<v-text-field label="URL" hint="External link to army list" v-model="selectedArmy.build_url" v-validate="'url'"  :error-messages="errors.collect('build_url')"
-                           data-vv-name="build_url"></v-text-field>
-                    </v-card-text>
-                    <v-card-actions>
-                        <v-btn @click.native="armyDialog = false">Close</v-btn>
-                        <v-btn @click.native="saveArmy">Save</v-btn>
-                    </v-card-actions>
-                </form>
-            </v-card>
-        </v-dialog>
+</v-data-table>
+<v-dialog v-model="armyDialog" persistent>
+    <v-card>
+        <form>
+            <v-card-title> Create An Item </v-card-title>
+            <v-card-text>
+                <v-text-field label="Name" hint="Short description of the army list" v-model="selectedArmy.name" required v-validate="'required'" required :error-messages="errors.collect('name')" data-vv-name="name"></v-text-field>
+                <v-select v-model="selectedArmy.faction" label="Faction" autocomplete required :items="factions" item-text='name' item-value="_id" v-validate="'required'" data-vv-name="faction" :error-messages="errors.collect('faction')"></v-select>
+                <v-text-field label="URL" hint="External link to army list" v-model="selectedArmy.build_url" v-validate="'url'" :error-messages="errors.collect('build_url')" data-vv-name="build_url"></v-text-field>
+            </v-card-text>
+            <v-card-actions>
+                <v-btn @click.native="armyDialog = false">Close</v-btn>
+                <v-btn @click.native="saveArmy">Save</v-btn>
+            </v-card-actions>
+        </form>
+    </v-card>
+</v-dialog>
 
-    </div>
+</div>
 
 </template>
 <script>
-	const util = require('util');
-    var armiesUri = '/armies'
+    const util = require('util');
     module.exports = {
         data: function() {
             return {
@@ -84,59 +79,99 @@
             }
         },
         created: function() {
-            this.fetchArmies();
-            this.fetchFactions();
+            if (!this.teamId) {
+                this.$router.push('Teams');
+            } else {
+                this.fetchArmies();
+                this.fetchFactions();
+            }
+        },
+        computed: {
+            token: function() {
+                return this.$store.getters.token;
+            },
+            teamId: function() {
+                return this.$store.getters.teamId;
+            }
         },
         methods: {
             fetchArmies() {
-                this.axios.get(armiesUri).then((response) => {
-                    this.armies = response.data;
+                this.axios.get('/armies/' + this.teamId, {
+                    headers: {
+                        'x-access-token': this.token
+                    }
+                }).then((response) => {
+                    this.armies = response.data.filter(army => army.player == null);
                 });
-            }, fetchFactions() {
-                this.axios.get('/factions').then((response) => {
+            },
+            fetchFactions() {
+                this.axios.get('/factions', {
+                    headers: {
+                        'x-access-token': this.token
+                    }
+                }).then((response) => {
                     this.factions = response.data;
                 });
-            }, deleteArmy(id) {
-                this.axios.delete('/army/' + id).then((response) => {
+            },
+            deleteArmy(id) {
+                this.axios.delete('/army/' + id, {
+                    headers: {
+                        'x-access-token': this.token
+                    }
+                }).then((response) => {
                     this.fetchArmies();
                 }).catch(function(error) {
                     console.log('Error', error.message);
                     console.log(error.config);
                 });
-            }, changeSort(column) {
+            },
+            changeSort(column) {
                 if (this.pagination.sortBy === column) {
                     this.pagination.descending = !this.pagination.descending
                 } else {
                     this.pagination.sortBy = column
                     this.pagination.descending = false
                 }
-            }, openArmyDialog() {
-                this.armyDialog = true;
-                this.selectedArmy = {};
-                this.$validator.reset();
-            }, openArmyDialogForEdit(item) {
+            },
+            openArmyDialog() {
                 this.armyDialog = true;
                 this.selectedArmy = {
-					_id: item._id,
-					name: item.name,
-					faction: item.faction._id,
-					build_url: item.build_url
-				}
+                    team: this.teamId
+                };
                 this.$validator.reset();
-            }, saveArmy() {
+            },
+            openArmyDialogForEdit(item) {
+                this.armyDialog = true;
+                this.selectedArmy = {
+                    _id: item._id,
+                    name: item.name,
+                    faction: item.faction._id,
+                    build_url: item.build_url
+                }
+                this.$validator.reset();
+            },
+            saveArmy() {
                 this.$validator.validateAll().then((result) => {
                     if (result) {
-						if (this.selectedArmy._id){
-							this.axios.post('/army/' + this.selectedArmy._id, this.selectedArmy).then((response) => {
-								this.armyDialog = false;
-								this.fetchArmies();
-							})
-						} else {
-							this.axios.post(armiesUri, this.selectedArmy).then((response) => {
-								this.armyDialog = false;
-								this.fetchArmies();
-							})
-						}
+                        if (this.selectedArmy._id) {
+                            this.axios.post('/army/' + this.selectedArmy._id, this.selectedArmy, {
+                                headers: {
+                                    'x-access-token': this.token
+                                }
+                            }).then((response) => {
+                                this.armyDialog = false;
+                                this.fetchArmies();
+                            })
+                        } else {
+                            this.axios.post('/armies', this.selectedArmy, {
+                                headers: {
+                                    'x-access-token': this.token
+                                }
+                            }).then((response) => {
+                                this.armyDialog = false;
+                                this.fetchArmies();
+                            })
+                        }
                         return;
                     }
                 });

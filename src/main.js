@@ -14,7 +14,8 @@ Vue.use(VueRouter);
 import VueAxios from 'vue-axios';
 import axios from 'axios';
 Vue.use(VueAxios, axios.create({
-	baseURL: 'https://whtmapi.herokuapp.com'
+	//baseURL: 'https://whtmapi.herokuapp.com'
+    baseURL: 'http://localhost:5000'
 }));
 
 import VeeValidate from 'vee-validate';
@@ -72,13 +73,21 @@ const router = new VueRouter({
 
 const store = new Vuex.Store({
   state: {
-    token: null
+    token: null,
+    teamId: null
   },
   mutations: {
     updateToken(state, token) {
       state.token = token
+    },
+    updateTeamId(state, teamId){
+      state.teamId = teamId;
     }
-  }
+  },
+    getters: {
+        token: state => state.token,
+        teamId: state => state.teamId
+    }
 })
 
 var vue = new Vue(Vue.util.extend({
