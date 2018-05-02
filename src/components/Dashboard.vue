@@ -3,6 +3,7 @@
 	<v-container fluid class="mb-5">
 		<h2>{{ team.name }}</h2>
 		<v-layout row wrap>
+            
 			<v-flex xs6 wrap>
 				
 				<chart style="width: auto" :options="coverageChartOptions" auto-resize></chart>
@@ -18,7 +19,7 @@
 								{{player.name}}
 								<v-spacer></v-spacer>
 
-								<v-chip :color="colors[(player.ratingsAvg / 25).toFixed(0)-1]" text-color="black">Coverage: {{player.ratingsAvg.toFixed(2)}}%</v-chip>
+								<v-chip :color="colors[player.color]" text-color="black">Coverage: {{player.ratingsAvg.toFixed(2)}}%</v-chip>
 								
 							</v-layout>
 
@@ -56,7 +57,7 @@
 		<v-layout class="mt-5" row wrap>
 			<v-flex xs12>
 				<v-expansion-panel expand popout>
-					<v-expansion-panel-content v-for="army in ratedArmies" :key="army._id">
+					<v-expansion-panel-content v-for="army in sortedArmyRatingTotals" :key="army._id">
 						<div slot="header">
 							<v-layout row wrap>
 								
@@ -64,7 +65,7 @@
 								
 								<v-spacer></v-spacer>
 								
-								<div v-for="rating, i in armyRatingTotals[army._id].ratingTotals" key="i">
+								<div v-for="rating, i in army.ratingTotals" key="i">
 									<span class="ma-1" v-for="j in rating">
 										<v-icon large :color="colors[i]">
 											{{ratingIcons[i]}}
@@ -72,7 +73,7 @@
 									</span>
 								</div>
 								
-								<v-chip :color="colors[(armyRatingTotals[army._id].coverage / 25).toFixed(0)]" text-color="black">Coverage: {{armyRatingTotals[army._id].coverage.toFixed(2)}}%</v-chip>
+								<v-chip :color="colors[(army.coverage / 25).toFixed(0)]" text-color="black">Coverage: {{army.coverage.toFixed(2)}}%</v-chip>
 							</v-layout>
 						</div>
 						<v-card>
@@ -114,9 +115,7 @@
                 armies: [],
                 ratings: [],
                 selectedFaction: '0',
-                selectedPlayer: null, //'5a0606ee4de4344bf0f5db51'
-
-
+                selectedPlayer: null
             }
 
         },
@@ -192,7 +191,8 @@
                                         ratingTotals: ratingTotals,
                                         ratingsSum: ratedArmy.rating,
                                         ratingsCount: 1,
-                                        ratingsAvg: ratedArmy.rating * 25
+                                        ratingsAvg: (ratedArmy.rating - 1) * 25,
+                                        color: ratedArmy.rating - 1
                                     }
                                     playersHash[owner._id] = playerEntry;
                                 } else {
@@ -200,7 +200,8 @@
                                     playerEntry.ratingTotals[ratedArmy.rating - 1]++;
                                     playerEntry.ratingsSum += ratedArmy.rating;
                                     playerEntry.ratingsCount++;
-                                    playerEntry.ratingsAvg = playerEntry.ratingsSum * 25 / playerEntry.ratingsCount;
+                                    playerEntry.ratingsAvg = ((playerEntry.ratingsSum / playerEntry.ratingsCount) - 1) * 25;
+                                    playerEntry.color = (playerEntry.ratingsSum / playerEntry.ratingsCount).toFixed(0) - 1;
                                 }
 
 
@@ -268,7 +269,7 @@
                                     detailsEntry.ratingTotals[ratedArmy.rating - 1]++;
                                     detailsEntry.ratingsSum += ratedArmy.rating;
                                     detailsEntry.ratingsCount++;
-                                    detailsEntry.ratingsAvg = detailsEntry.ratingsSum / detailsEntry.ratingsCount++;
+                                    detailsEntry.ratingsAvg = detailsEntry.ratingsSum / detailsEntry.ratingsCount;
                                 }
 
                             }
@@ -453,13 +454,16 @@
                         if (hash[army._id]) {
                             entry = hash[army._id];
                             entry.ratingTotals[rating.rating - 1]++;
+                            entry.ratings.push(rating);
                             if (rating.rating > entry.ratingsMax)
                                 entry.ratingsMax = rating.rating;
                             entry.ratingsSum += rating.rating;
                             entry.ratingsCount++;
                         } else {
                             entry = {
-                                ratingTotals: [0, 0, 0, 0, 0]
+                                name: army.name,
+                                ratingTotals: [0, 0, 0, 0, 0],
+                                ratings: [rating]
                             };
                             entry.ratingTotals[rating.rating - 1]++;
                             entry.ratingsMax = rating.rating;
@@ -467,13 +471,27 @@
                             entry.ratingsCount = 1;
                             hash[army._id] = entry;
                         }
-                        entry.coverage = entry.ratingsSum * 25 / entry.ratingsCount;
+                        entry.coverage = ((entry.ratingsSum / entry.ratingsCount) - 1) * 25;
                         entry.ratingsWeight = Number(entry.ratingTotals[4] + '.' + entry.ratingTotals[3] + entry.ratingTotals[2] + entry.ratingTotals[1] + entry.ratingTotals[0]);
                     });
                 });
 
                 return hash;
+                
             },
+            
+            sortedArmyRatingTotals: function(){
+                var self = this;
+                var list = [];
+                
+                Object.keys(self.armyRatingTotals).forEach(function(key) {
+                    list.push(self.armyRatingTotals[key]);
+                });
+
+                return list.sort(function(e1, e2){
+                    return e2.ratingsWeight - e1.ratingsWeight;
+                });
+            }
 
 
 
@@ -512,7 +530,7 @@
                 });
             },
             fetchRatings() {
-                this.axios.get('/ratings', {
+                this.axios.get('/ratings/' + this.teamId, {
                     headers: {
                         'x-access-token': this.token
                     }

@@ -14,8 +14,8 @@ Vue.use(VueRouter);
 import VueAxios from 'vue-axios';
 import axios from 'axios';
 Vue.use(VueAxios, axios.create({
-	baseURL: 'https://whtmapi.herokuapp.com'
-    //baseURL: 'http://localhost:5000'
+	//baseURL: 'https://whtmapi.herokuapp.com'
+    baseURL: 'http://localhost:5000'
 }));
 
 import VeeValidate from 'vee-validate';
@@ -94,3 +94,11 @@ var vue = new Vue(Vue.util.extend({
 	router,
     store
 }, App)).$mount('#app');
+
+
+//  TODO
+//  Fix form validations, remove vuelidate and veevalidate, use default method.
+//  Add focus to form fields in dialogs.
+//  Fix non-highlighted icon for Dashboard after login
+//  Fix coverage calculations (change rating * 25 to (rating-1) * 25)
+//  Add comments for documenting purposes on key algorithms
